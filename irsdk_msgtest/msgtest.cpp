@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #	define _WIN32_WINNT		MIN_WIN_VER 
 #endif
 
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
 #include <stdio.h>
@@ -79,13 +80,18 @@ int main()
 	printf(" - press 'n' to add fuel.\n");
 	printf(" - press 'o' to change tires.\n");
 	printf(" - press 'p' to clean windows.\n");
+	printf(" - press 'q' to clear tire pitstop commands.\n");
 	printf("\n");
 	printf(" - press 'r' to reload the custom car textures for all cars.\n");
-	printf(" - press 't' to reload the custom car textures for a specific carIdx.\n");
+	printf(" - press 's' to reload the custom car textures for a specific carIdx.\n");
 	printf("\n");
-	printf(" - press 'v' to play at normal speed.\n");
-	printf(" - press 'x' to play at 1/16th speed.\n");
-	printf(" - press 'z' to pause the replay.\n");
+	printf(" - press 't' to play at normal speed.\n");
+	printf(" - press 'u' to play at 1/16th speed.\n");
+	printf(" - press 'v' to pause the replay.\n");
+	printf("\n");
+	printf(" - press 'w' to stop recording telemetry to disk.\n");
+	printf(" - press 'x' to start recording telemetry to disk.\n");
+	printf(" - press 'y' to save out the old telemetry file and start a new one.\n");
 	printf(" press any other key to exit\n\n");
 
 	bool done = false;
@@ -214,6 +220,10 @@ int main()
 			printf("Clean window\n");
 			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_WS, 0);
 			break;
+		case 'q':
+			printf("Clear tire pit commands\n");
+			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_ClearTires, 0);
+			break;
 
 		// etc
 		case 'r':
@@ -221,7 +231,7 @@ int main()
 			irsdk_broadcastMsg(irsdk_BroadcastReloadTextures, irsdk_ReloadTextures_All, 0, 0);
 			break;
 
-		case 't':
+		case 's':
 			printf("Reload custom car textures for carIdx %d\n", carIdx);
 			irsdk_broadcastMsg(irsdk_BroadcastReloadTextures, irsdk_ReloadTextures_CarIdx, 
 				carIdx++,  // carIdx
@@ -231,22 +241,34 @@ int main()
 				carIdx = 0;
 			break;
 
-		case 'v':
+		case 't':
 			printf("Set playback speed to normal speed\n");
 			irsdk_broadcastMsg(irsdk_BroadcastReplaySetPlaySpeed, 1, false, 0);
 			break;
 
 
-		case 'x':
+		case 'u':
 			printf("Set playback speed to 1/16th speed\n");
 			irsdk_broadcastMsg(irsdk_BroadcastReplaySetPlaySpeed, 16, true, 0);
 			break;
 
-		case 'z':
+		case 'v':
 			printf("Pause playback\n");
 			irsdk_broadcastMsg(irsdk_BroadcastReplaySetPlaySpeed, 0, 0, 0);
 			break;
 
+		case 'w':
+			printf("Stop recording telemetry\n");
+			irsdk_broadcastMsg(irsdk_BroadcastTelemCommand, irsdk_TelemCommand_Stop, 0, 0);
+			break;
+		case 'x':
+			printf("Start recording telemetry\n");
+			irsdk_broadcastMsg(irsdk_BroadcastTelemCommand, irsdk_TelemCommand_Start, 0, 0);
+			break;
+		case 'y':
+			printf("Start new telemetry file\n");
+			irsdk_broadcastMsg(irsdk_BroadcastTelemCommand, irsdk_TelemCommand_Restart, 0, 0);
+			break;
 
 
 		default:
