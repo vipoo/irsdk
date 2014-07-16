@@ -2,4 +2,6 @@
 **/*.exe
 **/Release/*
 **/Debug/*
+**/*.sdf
+**/*.opensdf
 
