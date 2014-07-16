@@ -49,6 +49,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #	define _WIN32_WINNT		MIN_WIN_VER 
 #endif
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h>
 #include <stdio.h>
 #include <conio.h>
@@ -60,8 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // for timeBeginPeriod
 #pragma comment(lib, "Winmm")
-// don't warn about stdlib
-#pragma warning(disable: 4996) 
 
 // 16 ms timeout
 #define TIMEOUT 16

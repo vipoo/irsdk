@@ -302,6 +302,7 @@ enum irsdk_BroadcastMsg
 	irsdk_BroadcastReloadTextures,        // irsdk_ReloadTexturesMode, carIdx, unused
 	irsdk_BroadcastChatComand,		      // irsdk_ChatCommandMode, subCommand, unused
 	irsdk_BroadcastPitCommand,            // irsdk_PitCommandMode, parameter
+	irsdk_BroadcastTelemCommand,		  // irsdk_TelemCommandMode, unused, unused
 	irsdk_BroadcastLast                   // unused placeholder
 };
 
@@ -322,6 +323,14 @@ enum irsdk_PitCommandMode				// this only works when the driver is in the car
 	irsdk_PitCommand_RF,				// right front
 	irsdk_PitCommand_LR,				// left rear
 	irsdk_PitCommand_RR,				// right rear
+	irsdk_PitCommand_ClearTires,		// Clear tire pit checkboxes
+};
+
+enum irsdk_TelemCommandMode				// You can call this any time, but telemtry only records when driver is in there car
+{
+	irsdk_TelemCommand_Stop = 0,		// Turn telemetry recording off
+	irsdk_TelemCommand_Start,			// Turn telemetry recording on
+	irsdk_TelemCommand_Restart,			// Write current file to disk and start a new one
 };
 
 enum irsdk_RpyStateMode
