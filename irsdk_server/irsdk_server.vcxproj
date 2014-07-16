@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{AB890443-8EB2-493B-BE63-9FB6CD0C97FB}</ProjectGuid>
+    <ProjectGuid>{C6E71CB1-A7B7-4C2F-8B17-C385DB098B61}</ProjectGuid>
     <RootNamespace>irsdk_server</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
