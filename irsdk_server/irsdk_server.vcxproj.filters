@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="shared">
+      <UniqueIdentifier>{8fd79c7e-c133-4917-aaa6-271ac6d082c9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\irsdk_defines.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="irsdk_diskserver.h" />
+    <ClInclude Include="irsdk_memserver.h" />
+    <ClInclude Include="irsdk_server.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="irsdk_diskserver.cpp" />
+    <ClCompile Include="irsdk_memserver.cpp" />
+    <ClCompile Include="irsdk_server.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+</Project>

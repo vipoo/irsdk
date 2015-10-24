@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="shared">
-      <UniqueIdentifier>{79793172-20b4-437c-9226-779879664454}</UniqueIdentifier>
+      <UniqueIdentifier>{ed2d15a4-287e-4d51-823d-0e5e5f40d1ce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

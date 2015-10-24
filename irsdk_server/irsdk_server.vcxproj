@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{191EEAFD-58E6-4F37-B71A-38F746BAD4AB}</ProjectGuid>
-    <RootNamespace>irsdk_readtest</RootNamespace>
+    <ProjectGuid>{AB890443-8EB2-493B-BE63-9FB6CD0C97FB}</ProjectGuid>
+    <RootNamespace>irsdk_server</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -94,9 +94,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\irsdk_defines.h" />
+    <ClInclude Include="irsdk_diskserver.h" />
+    <ClInclude Include="irsdk_memserver.h" />
+    <ClInclude Include="irsdk_server.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="readtest.cpp" />
+    <ClCompile Include="irsdk_diskserver.cpp" />
+    <ClCompile Include="irsdk_memserver.cpp" />
+    <ClCompile Include="irsdk_server.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
