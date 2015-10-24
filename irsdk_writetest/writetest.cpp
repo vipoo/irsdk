@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #	define _WIN32_WINNT		MIN_WIN_VER 
 #endif
 
-#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
 #include <stdio.h>

@@ -31,5 +31,8 @@ history:
 - Added new remote call 'irsdk_BroadcastChatComand' to help automate chat commands. 
 - Added new remote call 'irsdk_BroadcastPitCommand' to allow custom manipulation of pit stop settings. 
 
-2014/04/23 - Maintenance update 
+2014/04/23 - Maintenance update
 - Added new remote call 'irsdk_BroadcastTelemCommand' to allow toggling on/off of disk based telemetry 
+
+2015/09/23 - Maintenance update
+- Add new telemetry defines to irsdk_defines.h

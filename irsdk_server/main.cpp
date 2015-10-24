@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 // don't warn about stdlib
-#define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 4996) 
 
 #include <windows.h>

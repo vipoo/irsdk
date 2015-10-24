@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #	define _WIN32_WINNT		MIN_WIN_VER 
 #endif
 
-#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
 #include <stdio.h>
@@ -92,6 +92,9 @@ int main()
 	printf(" - press 'w' to stop recording telemetry to disk.\n");
 	printf(" - press 'x' to start recording telemetry to disk.\n");
 	printf(" - press 'y' to save out the old telemetry file and start a new one.\n");
+	printf(" - press 'z' to toggle 'true' FFB mode.\n");
+	printf(" - press 'A' to go to session 1, time 100 seconds.\n");
+	printf(" - press 'B' to request a fast repair.\n");
 	printf(" press any other key to exit\n\n");
 
 	bool done = false;
@@ -103,6 +106,7 @@ int main()
 	int cameraState = 0;
 	int carIdx = 0;
 	int chatMacro = 0;
+	bool trueFFBState = false;
 
 	while(!done)
 	{
@@ -268,6 +272,32 @@ int main()
 		case 'y':
 			printf("Start new telemetry file\n");
 			irsdk_broadcastMsg(irsdk_BroadcastTelemCommand, irsdk_TelemCommand_Restart, 0, 0);
+			break;
+		case 'z':
+			{
+			float force = (trueFFBState) ? -1.0f : 20.9998f;
+			trueFFBState = !trueFFBState;
+
+			if(force < 0.0f)
+				printf("Set wheel to user controlled FFB\n");
+			else
+				printf("Set wheel to %f Nm\n", force);
+
+			irsdk_broadcastMsg(irsdk_BroadcastFFBCommand, irsdk_FFBCommand_MaxForce, force);
+			}
+
+			break;
+
+		case 'A':
+			printf("Set replay search to session 1 at 100 seconds\n");
+			// this does a search and not a direct jump, may take a while!
+			irsdk_broadcastMsg(irsdk_BroadcastReplaySearchSessionTime, 1, 100*1000);
+
+			break;
+
+		case 'B':
+			printf("Fast repair pit commands\n");
+			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_FR, 0);
 			break;
 
 

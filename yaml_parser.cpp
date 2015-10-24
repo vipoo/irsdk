@@ -62,6 +62,15 @@ bool parseYaml(const char *data, const char* path, const char **val, int *len)
 			switch(*data)
 			{
 			case ' ':
+				if(state == newline)
+					state = space;
+				if(state == space)
+					depth++;
+				else if(state == key)
+					keylen++;
+				else if(state == value)
+					valuelen++;
+				break;
 			case '-':
 				if(state == newline)
 					state = space;
@@ -71,6 +80,12 @@ bool parseYaml(const char *data, const char* path, const char **val, int *len)
 					keylen++;
 				else if(state == value)
 					valuelen++;
+				else if(state == keysep)
+				{
+					state = value;
+					valuestr = data;
+					valuelen = 1;
+				}
 				break;
 			case ':':
 				if(state == key)

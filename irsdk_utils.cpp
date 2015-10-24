@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // for timeBeginPeriod()
 #pragma comment(lib, "Winmm")
-// for RegisterWindowMessageA() and SendMessage()
+// for RegisterWindowMessage() and SendMessage()
 #pragma comment(lib, "User32")
 
 // Local memory
@@ -322,7 +322,7 @@ int irsdk_varNameToOffset(const char *name)
 
 unsigned int irsdk_getBroadcastMsgID()
 {
-	static unsigned int msgId = RegisterWindowMessageA(IRSDK_BROADCASTMSGNAME); 
+	static unsigned int msgId = RegisterWindowMessage(IRSDK_BROADCASTMSGNAME); 
 
 	return msgId;
 }
@@ -330,6 +330,14 @@ unsigned int irsdk_getBroadcastMsgID()
 void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, int var2, int var3)
 {
 	irsdk_broadcastMsg(msg, var1, MAKELONG(var2, var3));
+}
+
+void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, float var2)
+{
+	// multiply by 2^16-1 to move fractional part to the integer part
+	int real = (int)(var2 * 65536.0f);
+
+	irsdk_broadcastMsg(msg, var1, real);
 }
 
 void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, int var2)
