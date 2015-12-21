@@ -191,7 +191,7 @@ void irsdkMemServer::shutdown()
 
 // safe to call before m_isInitialized, only writes to localHeader
 int irsdkMemServer::regVar(const char *name, const void *var, 
-							  irsdk_VarType type, int count, 
+							  irsdk_VarType type, int _count, 
 							  const char *desc, const char *unit,
 							  float multiplier, float offset)
 {
@@ -221,7 +221,7 @@ int irsdkMemServer::regVar(const char *name, const void *var,
 				if(name && desc && unit)
 				{
 					//double check the space
-					int recLen = irsdk_VarTypeBytes[type] * count;
+					int recLen = irsdk_VarTypeBytes[type] * _count;
 					int usedLen = recLen + localHeader.bufLen;
 					assert(usedLen < irsdkMemServer::bufLength);
 
@@ -234,7 +234,7 @@ int irsdkMemServer::regVar(const char *name, const void *var,
 						localHeader.bufLen = usedLen;
 
 						rec->type = type;
-						rec->count = count;
+						rec->count = _count;
 
 						strncpy(rec->name, name, IRSDK_MAX_STRING);
 						rec->name[IRSDK_MAX_STRING-1] = '\0';
