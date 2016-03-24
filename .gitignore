@@ -4,4 +4,8 @@
 **/Debug/*
 **/*.sdf
 **/*.opensdf
+**/*.suo
+**/.vs
+.vs
+**/*.opendb
 
