@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <time.h>
 
+#include "irsdk_defines.h"
 #include "irsdk_client.h"
 #include "serial.h"
 

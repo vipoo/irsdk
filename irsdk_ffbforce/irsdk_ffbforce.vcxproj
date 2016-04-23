@@ -11,10 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5B0FA9D6-BE98-4A40-A6ED-1C6A92E38320}</ProjectGuid>
+    <ProjectGuid>{0B4042FE-6809-47BB-A22D-7A9593832AF7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>irsdk_ir2ad</RootNamespace>
-    <ProjectName>irsdk_ir2ad</ProjectName>
+    <RootNamespace>irsdk_ffbforce</RootNamespace>
+    <ProjectName>irsdk_ffbforce</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -79,17 +79,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\irsdk_client.cpp" />
+    <ClCompile Include="..\irsdk_diskclient.cpp" />
     <ClCompile Include="..\yaml_parser.cpp" />
-    <ClCompile Include="ir2ad.cpp" />
-    <ClCompile Include="serial.cpp" />
+    <ClCompile Include="ffbforce.cpp" />
     <ClCompile Include="..\irsdk_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\irsdk_client.h" />
-    <ClInclude Include="..\yaml_parser.h" />
-    <ClInclude Include="serial.h" />
+    <ClInclude Include="..\irsdk_diskclient.h" />
     <ClInclude Include="..\irsdk_defines.h" />
+    <ClInclude Include="..\yaml_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
