@@ -8,4 +8,5 @@
 **/.vs
 .vs
 **/*.opendb
+**/*.vcxproj.user
 

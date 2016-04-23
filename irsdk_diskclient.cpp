@@ -31,125 +31,151 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assert.h>
 #include "irsdk_defines.h"
 #include "yaml_parser.h"
-#include "irsdk_client.h"
+#include "irsdk_diskclient.h"
 
 #pragma warning(disable:4996)
 
-irsdkClient& irsdkClient::instance()
+
+bool irsdkDiskClient::openFile(const char *path)
 {
-	static irsdkClient INSTANCE;
-	return INSTANCE;
-}
+	closeFile();
 
-bool irsdkClient::waitForData(int timeoutMS)
-{
-	// wait for start of session or new data
-	if(irsdk_waitForDataReady(timeoutMS, m_data) && irsdk_getHeader())
+	m_ibtFile = fopen(path, "rb");
+	if(m_ibtFile)
 	{
-		// if new connection, or data changed lenght then init
-		if(!m_data || m_nData != irsdk_getHeader()->bufLen)
+		if(fread(&m_header, 1, sizeof(m_header), m_ibtFile) == sizeof(m_header))
 		{
-			// allocate memory to hold incoming data from sim
-			if(m_data) delete [] m_data;
-			m_nData = irsdk_getHeader()->bufLen;
-			m_data = new char[m_nData];
+			if(fread(&m_diskSubHeader, 1, sizeof(m_diskSubHeader), m_ibtFile) == sizeof(m_diskSubHeader))
+			{
+				m_sessionInfoString = new char[m_header.sessionInfoLen];
+				if(m_sessionInfoString)
+				{
+					fseek(m_ibtFile, m_header.sessionInfoOffset, SEEK_SET);
+					if(fread(m_sessionInfoString, 1, m_header.sessionInfoLen, m_ibtFile) == m_header.sessionInfoLen)
+					{
+						m_sessionInfoString[m_header.sessionInfoLen-1] = '\0';
 
-			// indicate a new connection
-			m_statusID++;
+						m_varHeaders = new irsdk_varHeader[m_header.numVars];
+						if(m_varHeaders)
+						{
+							fseek(m_ibtFile, m_header.varHeaderOffset, SEEK_SET);
+							int len = m_header.numVars * sizeof(irsdk_varHeader);
+							if(fread(m_varHeaders, 1, len, m_ibtFile) == len)
+							{
+								m_varBuf = new char[m_header.bufLen];
+								if(m_varBuf)
+								{
+									fseek(m_ibtFile, m_header.varBuf[0].bufOffset, SEEK_SET);
 
-			// and try to fill in the data
-			if(irsdk_getNewData(m_data))
-				return true;
+									return true;
+
+									//delete [] m_varBuf;
+									//m_varBuf = NULL;
+								}
+							}
+
+							delete [] m_varHeaders;
+							m_varHeaders = NULL;
+						}
+					}
+
+					delete [] m_sessionInfoString;
+					m_sessionInfoString = NULL;
+				}
+			}
 		}
-		else if(m_data)
-		{
-			// else we are allready initialized, and data is ready for processing
-			return true;
-		}
-	}
-	else if(!isConnected())
-	{
-		// else session ended
-		if(m_data)
-			delete[] m_data;
-		m_data = NULL;
+		fclose(m_ibtFile);
+		m_ibtFile = NULL;
 	}
 
 	return false;
 }
 
-void irsdkClient::shutdown()
+void irsdkDiskClient::closeFile()
 {
-	irsdk_shutdown();
-	if(m_data)
-		delete[] m_data;
-	m_data = NULL;
+	if(m_varBuf)
+		delete [] m_varBuf;
+	m_varBuf = NULL;
+
+	if(m_varHeaders)
+		delete [] m_varHeaders;
+	m_varHeaders = NULL;
+
+	if(m_sessionInfoString)
+		delete [] m_sessionInfoString;
+	m_sessionInfoString = NULL;
+
+	if(m_ibtFile)
+		fclose(m_ibtFile);
+	m_ibtFile = NULL;
 }
 
-bool irsdkClient::isConnected()
+bool irsdkDiskClient::getNextData()
 {
-	return m_data != NULL && irsdk_isConnected();
+	if(m_ibtFile)
+		return fread(m_varBuf, 1, m_header.bufLen, m_ibtFile) == m_header.bufLen;
+
+	return false;
 }
 
-int irsdkClient::getVarIdx(const char*name)
+int irsdkDiskClient::getVarIdx(const char *name)
 {
-	if(isConnected())
+	if(m_ibtFile && name)
 	{
-		return irsdk_varNameToIndex(name);
+		for(int idx=0; idx<m_header.numVars; idx++)
+		{
+			if(0 == strncmp(name, m_varHeaders[idx].name, IRSDK_MAX_STRING))
+			{
+				return idx;
+			}
+		}
 	}
 
-	return 0;
+	return -1;
 }
 
-int /*irsdk_VarType*/ irsdkClient::getVarType(int idx)
+irsdk_VarType irsdkDiskClient::getVarType(int idx)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			return vh->type;
+			return (irsdk_VarType)m_varHeaders[idx].type;
 		}
-		else
-		{
-			//invalid variable index
-			assert(false);
-		}
+
+		//invalid variable index
+		assert(false);
 	}
 
 	return irsdk_char;
 }
 
-int irsdkClient::getVarCount(int idx)
+int irsdkDiskClient::getVarCount(int idx)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			return vh->count;
+			return m_varHeaders[idx].count;
 		}
-		else
-		{
-			//invalid variable index
-			assert(false);
-		}
+
+		//invalid variable index
+		assert(false);
 	}
 
 	return 0;
 }
 
-bool irsdkClient::getVarBool(int idx, int entry)
+bool irsdkDiskClient::getVarBool(int idx, int entry)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			if(entry >= 0 && entry < vh->count)
+			if(entry >= 0 && entry < m_varHeaders[idx].count)
 			{
-				const char * data = m_data + vh->offset;
-				switch(vh->type)
+				const char * data = m_varBuf + m_varHeaders[idx].offset;
+				switch(m_varHeaders[idx].type)
 				{
 				// 1 byte
 				case irsdk_char:
@@ -192,17 +218,16 @@ bool irsdkClient::getVarBool(int idx, int entry)
 	return false;
 }
 
-int irsdkClient::getVarInt(int idx, int entry)
+int irsdkDiskClient::getVarInt(int idx, int entry)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			if(entry >= 0 && entry < vh->count)
+			if(entry >= 0 && entry < m_varHeaders[idx].count)
 			{
-				const char * data = m_data + vh->offset;
-				switch(vh->type)
+				const char * data = m_varBuf + m_varHeaders[idx].offset;
+				switch(m_varHeaders[idx].type)
 				{
 				// 1 byte
 				case irsdk_char:
@@ -242,17 +267,16 @@ int irsdkClient::getVarInt(int idx, int entry)
 	return 0;
 }
 
-float irsdkClient::getVarFloat(int idx, int entry)
+float irsdkDiskClient::getVarFloat(int idx, int entry)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			if(entry >= 0 && entry < vh->count)
+			if(entry >= 0 && entry < m_varHeaders[idx].count)
 			{
-				const char * data = m_data + vh->offset;
-				switch(vh->type)
+				const char * data = m_varBuf + m_varHeaders[idx].offset;
+				switch(m_varHeaders[idx].type)
 				{
 				// 1 byte
 				case irsdk_char:
@@ -292,17 +316,16 @@ float irsdkClient::getVarFloat(int idx, int entry)
 	return 0.0f;
 }
 
-double irsdkClient::getVarDouble(int idx, int entry)
+double irsdkDiskClient::getVarDouble(int idx, int entry)
 {
-	if(isConnected())
+	if(m_ibtFile)
 	{
-		const irsdk_varHeader *vh = irsdk_getVarHeaderEntry(idx);
-		if(vh)
+		if(idx >= 0 && idx < m_header.numVars)
 		{
-			if(entry >= 0 && entry < vh->count)
+			if(entry >= 0 && entry < m_varHeaders[idx].count)
 			{
-				const char * data = m_data + vh->offset;
-				switch(vh->type)
+				const char * data = m_varBuf + m_varHeaders[idx].offset;
+				switch(m_varHeaders[idx].type)
 				{
 				// 1 byte
 				case irsdk_char:
@@ -343,13 +366,13 @@ double irsdkClient::getVarDouble(int idx, int entry)
 }
 
 //path is in the form of "DriverInfo:Drivers:CarIdx:{%d}UserName:"
-int irsdkClient::getSessionStrVal(const char *path, char *val, int valLen)
+int irsdkDiskClient::getSessionStrVal(const char *path, char *val, int valLen)
 {
-	if(isConnected() && path && val && valLen > 0)
+	if(m_ibtFile && path && val && valLen > 0)
 	{
 		const char *tVal = NULL;
 		int tValLen = 0;
-		if(parseYaml(irsdk_getSessionInfoStr(), path, &tVal, &tValLen))
+		if(parseYaml(m_sessionInfoString, path, &tVal, &tValLen))
 		{
 			// dont overflow out buffer
 			int len = tValLen;
@@ -371,76 +394,3 @@ int irsdkClient::getSessionStrVal(const char *path, char *val, int valLen)
 	return 0;
 }
 
-//----------------------------------
-
-irsdkCVar::irsdkCVar(const char *name)
-	: m_idx(0)
-	, m_statusID(-1)
-{
-	if(name)
-	{
-		strncpy(m_name, name, max_string);
-		m_name[max_string-1] = '\0';
-	}
-	else
-		m_name[0] = '\0';
-}
-
-bool irsdkCVar::checkIdx()
-{
-	if(irsdkClient::instance().isConnected())
-	{
-		if(m_statusID != irsdkClient::instance().getStatusID())
-		{
-			m_statusID = irsdkClient::instance().getStatusID();
-			m_idx = irsdkClient::instance().getVarIdx(m_name);
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-int /*irsdk_VarType*/ irsdkCVar::getType()
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarType(m_idx);
-	return 0;
-}
-
-int irsdkCVar::getCount()
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarCount(m_idx);
-	return 0;
-}
-
-
-bool irsdkCVar::getBool(int entry)
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarBool(m_idx, entry);
-	return false;
-}
-
-int irsdkCVar::getInt(int entry)
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarInt(m_idx, entry);
-	return 0;
-}
-
-float irsdkCVar::getFloat(int entry)
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarFloat(m_idx, entry);
-	return 0.0f;
-}
-
-double irsdkCVar::getDouble(int entry)
-{
-	if(checkIdx())
-		return irsdkClient::instance().getVarDouble(m_idx, entry);
-	return 0.0;
-}

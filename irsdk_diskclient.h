@@ -25,30 +25,51 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef IRSDKCLIENT_H
-#define IRSDKCLIENT_H
+#ifndef IRSDKDISKCLIENT_H
+#define IRSDKDISKCLIENT_H
 
-// A C++ wrapper around the irsdk calls that takes care of the details of maintaining a connection.
-// reads out the data into a cache so you don't have to worry about timming
-class irsdkClient
+// A C++ wrapper around the irsdk calls that takes care of reading a .ibt file
+
+class irsdkDiskClient
 {
 public:
-	// singleton
-	static irsdkClient& instance();
 
-	// wait for live data, or if a .ibt file is open
-	// then read the next line from the file.
-	bool waitForData(int timeoutMS = 16);
+	irsdkDiskClient()
+		: m_ibtFile(NULL)
+		, m_sessionInfoString(NULL)
+		, m_varHeaders(NULL)
+		, m_varBuf(NULL)
+	{
+		memset(&m_header, 0, sizeof(m_header));
+		memset(&m_diskSubHeader, 0, sizeof(m_diskSubHeader));
+	}
 
-	bool isConnected();
-	int getStatusID() { return m_statusID; }
+	irsdkDiskClient(const char *path)
+		: m_ibtFile(NULL)
+		, m_sessionInfoString(NULL)
+		, m_varHeaders(NULL)
+		, m_varBuf(NULL)
+	{
+		memset(&m_header, 0, sizeof(m_header));
+		memset(&m_diskSubHeader, 0, sizeof(m_diskSubHeader));
 
-	int getVarIdx(const char*name);
+		openFile(path);
+	}
+
+	~irsdkDiskClient() { closeFile(); }
+
+	bool isFileOpen() { return m_ibtFile != NULL; }
+	bool openFile(const char *path);
+	void closeFile();
+
+	// read next line out of file
+	bool getNextData();
+
+	int getVarIdx(const char *name);
 
 	// what is the base type of the data
-	// returns irsdk_VarType as int so we don't depend on irsdk_defines.h
-	int getVarType(int idx);
-	int getVarType(const char *name) { return getVarType(getVarIdx(name)); }
+	irsdk_VarType getVarType(int idx);
+	irsdk_VarType getVarType(const char *name) { return getVarType(getVarIdx(name)); }
 
 	// how many elements in array, or 1 if not an array
 	int getVarCount(int idx);
@@ -73,48 +94,14 @@ public:
 
 protected:
 
-	irsdkClient()
-		: m_data(NULL)
-		, m_nData(0)
-		, m_statusID(0)
-	{ }
+	irsdk_header m_header;
+	irsdk_diskSubHeader m_diskSubHeader;
 
-	~irsdkClient() { shutdown(); }
+	char *m_sessionInfoString;
+	irsdk_varHeader *m_varHeaders;
+	char *m_varBuf;
 
-	void shutdown();
-
-	char *m_data;
-	int m_nData;
-	int m_statusID;
-
-	static irsdkClient *m_instance;
+	FILE *m_ibtFile;
 };
 
-
-// helper class to keep track of our variables index
-// Create a global instance of this and it will take care of the details for you.
-class irsdkCVar
-{
-public:
-	irsdkCVar(const char *name);
-
-	// returns irsdk_VarType as int so we don't depend on irsdk_defines.h
-	int getType();
-	int getCount();
-
-	// entry is the array offset, or 0 if not an array element
-	bool getBool(int entry = 0);
-	int getInt(int entry = 0);
-	float getFloat(int entry = 0);
-	double getDouble(int entry = 0);
-
-protected:
-	bool checkIdx();
-
-	static const int max_string = 32; //IRSDK_MAX_STRING
-	char m_name[max_string];
-	int m_idx;
-	int m_statusID;
-};
-
-#endif // IRSDKCLIENT_H
+#endif // IRSDKDISKCLIENT_H

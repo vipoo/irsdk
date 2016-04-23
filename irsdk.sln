@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irsdk_writetest", "irsdk_wr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irsdk_ir2ad", "irsdk_ir2ad\ir2ad.vcxproj", "{5B0FA9D6-BE98-4A40-A6ED-1C6A92E38320}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irsdk_ffbforce", "irsdk_ffbforce\irsdk_ffbforce.vcxproj", "{0B4042FE-6809-47BB-A22D-7A9593832AF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,10 @@ Global
 		{5B0FA9D6-BE98-4A40-A6ED-1C6A92E38320}.Debug|Win32.Build.0 = Debug|Win32
 		{5B0FA9D6-BE98-4A40-A6ED-1C6A92E38320}.Release|Win32.ActiveCfg = Release|Win32
 		{5B0FA9D6-BE98-4A40-A6ED-1C6A92E38320}.Release|Win32.Build.0 = Release|Win32
+		{0B4042FE-6809-47BB-A22D-7A9593832AF7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0B4042FE-6809-47BB-A22D-7A9593832AF7}.Debug|Win32.Build.0 = Debug|Win32
+		{0B4042FE-6809-47BB-A22D-7A9593832AF7}.Release|Win32.ActiveCfg = Release|Win32
+		{0B4042FE-6809-47BB-A22D-7A9593832AF7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
