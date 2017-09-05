@@ -51,7 +51,7 @@ bool irsdkDiskClient::openFile(const char *path)
 				if(m_sessionInfoString)
 				{
 					fseek(m_ibtFile, m_header.sessionInfoOffset, SEEK_SET);
-					if(fread(m_sessionInfoString, 1, m_header.sessionInfoLen, m_ibtFile) == m_header.sessionInfoLen)
+					if(fread(m_sessionInfoString, 1, m_header.sessionInfoLen, m_ibtFile) == (size_t)m_header.sessionInfoLen)
 					{
 						m_sessionInfoString[m_header.sessionInfoLen-1] = '\0';
 
@@ -59,7 +59,7 @@ bool irsdkDiskClient::openFile(const char *path)
 						if(m_varHeaders)
 						{
 							fseek(m_ibtFile, m_header.varHeaderOffset, SEEK_SET);
-							int len = m_header.numVars * sizeof(irsdk_varHeader);
+							size_t len = m_header.numVars * sizeof(irsdk_varHeader);
 							if(fread(m_varHeaders, 1, len, m_ibtFile) == len)
 							{
 								m_varBuf = new char[m_header.bufLen];
@@ -113,7 +113,7 @@ void irsdkDiskClient::closeFile()
 bool irsdkDiskClient::getNextData()
 {
 	if(m_ibtFile)
-		return fread(m_varBuf, 1, m_header.bufLen, m_ibtFile) == m_header.bufLen;
+		return fread(m_varBuf, 1, m_header.bufLen, m_ibtFile) == (size_t)m_header.bufLen;
 
 	return false;
 }

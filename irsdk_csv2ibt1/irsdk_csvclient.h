@@ -30,79 +30,78 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // A C++ wrapper around the irsdk calls that takes care of reading a .ibt file
 
-class irsdkDiskClient
+class irsdkCSVClient
 {
 public:
 
-	irsdkDiskClient()
-		: m_ibtFile(NULL)
-		, m_sessionInfoString(NULL)
+	irsdkCSVClient()
+		: m_csvFile(NULL)
 		, m_varHeaders(NULL)
+		, m_varScale(NULL)
 		, m_varBuf(NULL)
+		, m_varCount(0)
 	{
-		memset(&m_header, 0, sizeof(m_header));
-		memset(&m_diskSubHeader, 0, sizeof(m_diskSubHeader));
 	}
 
-	irsdkDiskClient(const char *path)
-		: m_ibtFile(NULL)
-		, m_sessionInfoString(NULL)
+	irsdkCSVClient(const char *path)
+		: m_csvFile(NULL)
 		, m_varHeaders(NULL)
+		, m_varScale(NULL)
 		, m_varBuf(NULL)
+		, m_varCount(0)
 	{
-		memset(&m_header, 0, sizeof(m_header));
-		memset(&m_diskSubHeader, 0, sizeof(m_diskSubHeader));
-
 		openFile(path);
 	}
 
-	~irsdkDiskClient() { closeFile(); }
+	~irsdkCSVClient() { closeFile(); }
 
-	bool isFileOpen() { return m_ibtFile != NULL; }
+	bool isFileOpen() { return m_csvFile != NULL; }
 	bool openFile(const char *path);
 	void closeFile();
 
 	// read next line out of file
 	bool getNextData();
-	int getDataCount() { return m_diskSubHeader.sessionRecordCount; }
 
 	int getVarIdx(const char *name);
 
-	// what is the base type of the data
-	irsdk_VarType getVarType(int idx);
-	irsdk_VarType getVarType(const char *name) { return getVarType(getVarIdx(name)); }
+	float getVarFloat(int idx);
+	float getVarFloat(const char *name) { return getVarFloat(getVarIdx(name)); }
 
-	// how many elements in array, or 1 if not an array
-	int getVarCount(int idx);
-	int getVarCount(const char *name) { return getVarCount(getVarIdx(name)); }
-
-	// idx is the variables index, entry is the array offset, or 0 if not an array element
-	// will convert data to requested type
-	bool getVarBool(int idx, int entry = 0);
-	bool getVarBool(const char *name, int entry = 0) { return getVarBool(getVarIdx(name), entry); }
-
-	int getVarInt(int idx, int entry = 0);
-	int getVarInt(const char *name, int entry = 0) { return getVarInt(getVarIdx(name), entry); }
-	
-	float getVarFloat(int idx, int entry = 0);
-	float getVarFloat(const char *name, int entry = 0) { return getVarFloat(getVarIdx(name), entry); }
-
-	double getVarDouble(int idx, int entry = 0);
-	double getVarDouble(const char *name, int entry = 0) { return getVarDouble(getVarIdx(name), entry); }
-
-	// 1 success, 0 failure, -n minimum buffer size
-	int getSessionStrVal(const char *path, char *val, int valLen);
+	int getVarCount() { return m_varCount; }
+	const irsdk_varHeader* getVarHeaders() { return m_varHeaders; }
+	const float* getVarArray() { return m_varBuf; }
 
 protected:
+	enum line_type
+	{
+		ltMisc = 0,
+		ltHeader,
+		ltUnit,
+		ltConvert,
+		ltData
+	};
 
-	irsdk_header m_header;
-	irsdk_diskSubHeader m_diskSubHeader;
+	bool parseDataLine(char* line);
+	void parceNameAndUnit(const char *str, irsdk_varHeader &head, int &varOffset);
+	irsdkCSVClient::line_type getLineType(const char *str, bool &hasHeader, bool &hasUnit);
+	char* stripEnds(char *st);
+	char* getNextElement(char *baseStr);
+	float strToFloat(const char *str);
 
-	char *m_sessionInfoString;
+
+	// o = i * mul + add;
+	struct scale
+	{
+		float mul;
+		float add;
+	};
+
+	int m_varCount;
 	irsdk_varHeader *m_varHeaders;
-	char *m_varBuf;
+	scale *m_varScale;
+	float *m_varBuf;
 
-	FILE *m_ibtFile;
+	FILE *m_csvFile;
 };
 
 #endif // IRSDKDISKCLIENT_H
