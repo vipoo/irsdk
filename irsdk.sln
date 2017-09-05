@@ -15,6 +15,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irsdk_server", "irsdk_serve
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irsdk_writetest", "irsdk_writetest\irsdk_writetest.vcxproj", "{5B5EEA89-4D0A-460F-91A8-A526171961F6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5C7DA8CD-DA68-4302-B26C-B552EEEBF80B}"
+	ProjectSection(SolutionItems) = preProject
+		irsdk_client.cpp = irsdk_client.cpp
+		irsdk_client.h = irsdk_client.h
+		irsdk_defines.h = irsdk_defines.h
+		irsdk_diskclient.cpp = irsdk_diskclient.cpp
+		irsdk_diskclient.h = irsdk_diskclient.h
+		irsdk_utils.cpp = irsdk_utils.cpp
+		README.md = README.md
+		yaml_parser.cpp = yaml_parser.cpp
+		yaml_parser.h = yaml_parser.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
