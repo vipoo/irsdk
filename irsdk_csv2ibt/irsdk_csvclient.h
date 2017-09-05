@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // A C++ wrapper around the irsdk calls that takes care of reading a .ibt file
 
+#define MAX_YAML_STR_LEN 131072
 class irsdkCSVClient
 {
 public:
@@ -41,6 +42,17 @@ public:
 		, m_varBuf(NULL)
 		, m_varCount(0)
 	{
+		const char dummyStr[] =  
+			"---\n"
+			"WeekendInfo:\n"
+			"SessionLogInfo:\n"
+			" SessionStartDate: 2016-10-11 1:59:23\n"
+			" SessionStartTime: 0.0\n"
+			" SessionEndTime: 1.0\n"
+			" SessionLapCount: 1\n"
+			" SessionRecordCount: 100\n"
+			"...\n";
+		memcpy(yamlStr, dummyStr, strlen(dummyStr) * sizeof(char));
 	}
 
 	irsdkCSVClient(const char *path)
@@ -71,19 +83,26 @@ public:
 	const irsdk_varHeader* getVarHeaders() { return m_varHeaders; }
 	const float* getVarArray() { return m_varBuf; }
 
+	const char* getYAMLStr() { return yamlStr; }
+
 protected:
 	enum line_type
 	{
-		ltMisc = 0,
-		ltHeader,
-		ltUnit,
-		ltConvert,
-		ltData
+		ltMisc = 0,		// don't know what this line is, probably nothing
+		ltYAMLStart,	// start of yaml string (---)
+		ltYAMLContent,	// middle of yaml string ( MaxCount: 4)
+		ltYAMLEnd,		// end of yaml string (...)
+		ltHeader,		// names of the columns (YawRate, etc)
+		ltDescription,	// long description of the columns (x is the product of y...)
+		ltUnit,			// unit type for column (f, s, m/s, etc)
+		ltType,			// data type of column (integer, float, double, boolean, bitfield)
+		ltConvert,		// conversion parameters (+1*5)
+		ltData			// what we came here for (1.34)
 	};
 
 	bool parseDataLine(char* line);
 	void parceNameAndUnit(const char *str, irsdk_varHeader &head, int &varOffset);
-	irsdkCSVClient::line_type getLineType(const char *str, bool &hasHeader, bool &hasUnit);
+	irsdkCSVClient::line_type getLineType(const char *str, bool &hasHeader, bool &hasDesc, bool &hasUnit, bool &hasType, bool &hasConversion, bool &isYAMLStr);
 	char* stripEnds(char *st);
 	char* getNextElement(char *baseStr);
 	float strToFloat(const char *str);
@@ -100,6 +119,8 @@ protected:
 	irsdk_varHeader *m_varHeaders;
 	scale *m_varScale;
 	float *m_varBuf;
+
+	char yamlStr[MAX_YAML_STR_LEN];
 
 	FILE *m_csvFile;
 };

@@ -53,15 +53,23 @@ bool irsdkCSVClient::openFile(const char *path)
 	{
 		char line[MAX_LINE];
 		bool hasHeader = false;
+		bool hasDesc = false;
 		bool hasUnit = false;
+		bool hasType = false;
+		bool hasConversion = false;
+		bool isYAMLStr = false;
 
 		// grab the header
 		while(fgets(line, MAX_LINE, m_csvFile) && strlen(line) > 0)
 		{
 			line[MAX_LINE-1] = '\0';
-			line_type type = getLineType(line, hasHeader, hasUnit);
+			line_type type = getLineType(line, hasHeader, hasDesc, hasUnit, hasType, hasConversion, isYAMLStr);
 
-			if(type == ltHeader)
+			if(type == ltYAMLStart || type == ltYAMLContent || type == ltYAMLEnd)
+			{
+				strcpy(yamlStr, line); //****FixMe, not safe, keep track of string length and don't overflow buffer
+			}
+			else if(type == ltHeader)
 			{
 				int len = (int)strlen(line);
 				// guess at how many entrys there are
@@ -88,6 +96,7 @@ bool irsdkCSVClient::openFile(const char *path)
 					{
 						m_varScale[i].mul = 1;
 						m_varScale[i].add = 0;
+						m_varHeaders[i].type = irsdk_float; // assume float data by default
 					}
 					m_varCount = 0;
 
@@ -114,6 +123,20 @@ bool irsdkCSVClient::openFile(const char *path)
 					}
 				}
 			}
+			else if(type == ltDescription)
+			{
+					int count = 0;
+					char *st = getNextElement(line); 
+					while(st != NULL && count < m_varCount)
+					{
+						st = stripEnds(st);
+						strncpy(m_varHeaders[count].desc, st, IRSDK_MAX_DESC);
+						m_varHeaders[count].desc[IRSDK_MAX_DESC-1] = '\0';
+
+						count++;
+						st = getNextElement(NULL);
+					}
+			}
 			else if(type == ltUnit)
 			{
 					int count = 0;
@@ -123,6 +146,34 @@ bool irsdkCSVClient::openFile(const char *path)
 						st = stripEnds(st);
 						strncpy(m_varHeaders[count].unit, st, IRSDK_MAX_STRING);
 						m_varHeaders[count].unit[IRSDK_MAX_STRING-1] = '\0';
+
+						count++;
+						st = getNextElement(NULL);
+					}
+			}
+			else if(type == ltType)
+			{
+					int count = 0;
+					char *st = getNextElement(line); 
+					while(st != NULL && count < m_varCount)
+					{
+						//****FixMe, can't set this correctly unless we force parseDataLine() to match, and allocate m_varBuf[] properly
+						/*
+						if(0 == strcmp(st, "double"))
+							m_varHeaders[count].type = irsdk_double;
+						else if(0 == strcmp(st, "float"))
+							m_varHeaders[count].type = irsdk_float;
+						else if(0 == strcmp(st, "bitfield"))
+							m_varHeaders[count].type = irsdk_bitField;
+						else if(0 == strcmp(st, "integer"))
+							m_varHeaders[count].type = irsdk_int;
+						else if(0 == strcmp(st, "boolean"))
+							m_varHeaders[count].type = irsdk_bool;
+						else if(0 == strcmp(st, "string"))
+							m_varHeaders[count].type = irsdk_char;
+						else
+						*/
+							m_varHeaders[count].type = irsdk_float;
 
 						count++;
 						st = getNextElement(NULL);
@@ -152,6 +203,7 @@ bool irsdkCSVClient::openFile(const char *path)
 			}
 			else if(type == ltData)
 			{
+				// we eat the rest of the file in this function
 				parseDataLine(line);
 				return true;
 			}
@@ -196,6 +248,7 @@ bool irsdkCSVClient::parseDataLine(char* line)
 			char *st = getNextElement(line);
 			while(st != NULL && i < m_varCount)
 			{
+				//****FixMe, convert based on unit type, if set
 				m_varBuf[i] = strToFloat(st);
 				m_varBuf[i] = m_varBuf[i] * m_varScale[i].mul;
 				m_varBuf[i] = m_varBuf[i] + m_varScale[i].add;
@@ -315,38 +368,72 @@ void irsdkCSVClient::parceNameAndUnit(const char *str, irsdk_varHeader &head, in
 }
 
 
-
-// misc: scan for delimiters, if less than two found then toss it as a comment
-// data: scann for numbers, if only 0-9. and delimiter found then is data, keep a ratio
-// scale: scann for * and + characters, if header found then this is scale
-// header comes before unit.
-irsdkCSVClient::line_type irsdkCSVClient::getLineType(const char *str, bool &hasHeader, bool &hasUnit)
+// irsdk_writeTest outputs a csv with the following sequence
+// yaml header (session string)
+// column names (header) - single words with no space ie name, name, name
+// column descriptions - multiple words with spaces ie desc has many words, this one does too
+// column unit type - few characters, possibly with slash and percent symbols ie c, f, m/s, %
+// column data type - string descriptors like double, integer, float, bitfield, boolean
+// column data - numbers minus sign and decimal points ie 3.14, 23, -56.5
+//
+// you can also add the units directly to the name by appending it 
+// in bracets like this: name[unit],
+//
+//****FixMe add in conversion support
+// conversions would be in the form of +5*7
+//
+irsdkCSVClient::line_type irsdkCSVClient::getLineType(const char *str, bool &hasHeader, bool &hasDesc, bool &hasUnit, bool &hasType, bool &hasConversion, bool &isYAMLStr)
 {
 	if(str)
 	{
 		int delimCount = 0;
-		int unitCount = 0;
+		int unitBracketCount = 0;
 		int cvtCount = 0;
 		int numCount = 0;
 		int alphaCount = 0;
 		int spaceCount = 0;
+		int typeCount = 0;
 		int miscCount = 0;
+
+		// check for yaml string first
+		if(!hasHeader && !hasUnit && 0 == strncmp(str, "---", 3))
+		{
+			isYAMLStr = true;
+			return ltYAMLStart;
+		}
+
+		if(!hasHeader && !hasUnit && 0 == strncmp(str, "...", 3))
+		{
+			isYAMLStr = false;
+			return ltYAMLEnd;
+		}
+
+		if(isYAMLStr)
+			return ltYAMLContent;
 
 		int len = strlen(str);
 		for(int i=0; i<len; i++)
 		{
-			if(str[i] == ',')
+			if(0 == strncmp(&str[i], "double", strlen("double")) ||
+			   0 == strncmp(&str[i], "integer", strlen("integer")) ||
+			   0 == strncmp(&str[i], "boolean", strlen("boolean")) ||
+			   0 == strncmp(&str[i], "bitfield", strlen("bitfield")) ||
+			   0 == strncmp(&str[i], "float", strlen("float")) )
+			{
+			   typeCount++;
+			}
+			else if(str[i] == ',')
 				delimCount++;
 			else if(str[i] == '[' || str[i] == ']')
-				unitCount++;
+				unitBracketCount++;
 			else if(str[i] == '*' || str[i] == '+')
 				cvtCount++;
 			else if((str[i] >= '0' && str[i] <= '9') || str[i] == '.' || str[i] == '-')
 				numCount++;
-			else if(isalnum((unsigned char)str[i]))
-				alphaCount++;
 			else if(str[i] == ' ' || str[i] == '\t')
 				spaceCount++;
+			else if(isalpha((unsigned char)str[i]))
+				alphaCount++;
 			else
 				miscCount++;
 		}
@@ -355,37 +442,56 @@ irsdkCSVClient::line_type irsdkCSVClient::getLineType(const char *str, bool &has
 			return ltMisc;
 		// else it is something
 
-		// check if we have units declared in brackets after our name like name1[unit1],name2[unit2]
-		// if we find brackets then we can assume it is a header
-		if(!hasHeader && unitCount > delimCount)
+		if(typeCount > 0.5*delimCount) // if we know this is a type line
 		{
-			hasUnit = true;
-			hasHeader = true;
-			return ltHeader;
+			hasType = true;
+			return ltType;
+		}
+		else if(alphaCount > delimCount) // not a number if enough characters for every column to have one
+		{
+			// column names (header) - assume first non junk line is header
+			if(!hasHeader)
+			{
+				// check if we have units declared in brackets after our name like name1[unit1],name2[unit2]
+				// technically we should look at unitBracketCount/2, but lets be forgiving of missing units
+				if(unitBracketCount > delimCount)
+					hasUnit = true;
+
+				hasHeader = true;
+				return ltHeader;
+			}
+
+			// column descriptions - multiple words with spaces ie desc has many words, this one does too
+			if(!hasDesc && alphaCount > 5*delimCount)
+			{
+				hasDesc = true;
+				return ltDescription;
+			}
+
+			// column unit type - few characters, possibly with slash and percent symbols ie c, f, m/s, %
+			if(!hasUnit && alphaCount < 3*delimCount)
+			{
+				hasUnit = true;
+				return ltUnit;
+			}
+		}
+		else // is a number
+		{
+			// if we find +* and numbers then assume it is a unit conversion line
+			if(!hasConversion && cvtCount > 0 && numCount > 0)
+			{
+				hasConversion = true;
+				return ltConvert;
+			}
+
+			// if line is mostly made up of numbers, and there are enough numbers for one in each column
+			// then assume this is data.
+			if(numCount > delimCount && numCount > (4 * alphaCount))
+			{
+				return ltData;
+			}
 		}
 
-		// assume first non junk line is header
-		// we could try to detect unit conversions first, but for now this works
-		if(!hasHeader)
-		{
-			hasHeader = true;
-			return ltHeader;
-		}
-
-		// if we find +* and numbers then assume it is a unit conversion line
-		if(cvtCount > 0 && numCount > 0)
-			return ltConvert;
-
-		// if line is mostly made up of numbers, and there are enough numbers for one in each column
-		// then assume this is data.
-		if(numCount > delimCount && numCount > (4 * alphaCount))
-			return ltData;
-
-		else if(!hasUnit && alphaCount > delimCount)
-		{
-			hasUnit = true;
-			return ltUnit;
-		}
 
 		return ltMisc;
 

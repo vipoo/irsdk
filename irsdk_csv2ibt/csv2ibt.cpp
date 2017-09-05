@@ -61,17 +61,6 @@ int g_sessionTimeOffset = -1;
 const char g_lapIndexString[] = "Lap";
 int g_lapIndexOffset = -1;
 
-//****FixMe, properly deal with session string at some point
-const char sessionStr[] =
-	"---\n"
-	"WeekendInfo:\n"
-	"SessionLogInfo:\n"
-	" SessionStartDate: %s\n"
-	" SessionStartTime: 0.0\n"
-	" SessionEndTime: 1.0\n"
-	" SessionLapCount: 1\n"
-	" SessionRecordCount: 100\n"
-	"...\n";
 /*
 // place holders for variables that need to be updated in the header of our session string
 double startTime;
@@ -194,7 +183,7 @@ void logHeaderToIBT(irsdkCSVClient *pCSV, FILE *pIBT)
 
 		// pointer to session info string
 		g_diskHeader.sessionInfoUpdate = 0;
-		g_diskHeader.sessionInfoLen = strlen(sessionStr);
+		g_diskHeader.sessionInfoLen = strlen(pCSV->getYAMLStr());
 		g_diskHeader.sessionInfoOffset = offset;
 		offset += g_diskHeader.sessionInfoLen;
 
@@ -206,7 +195,7 @@ void logHeaderToIBT(irsdkCSVClient *pCSV, FILE *pIBT)
 		fwrite(&g_diskHeader, 1, sizeof(g_diskHeader), pIBT);
 		fwrite(&g_diskSubHeader, 1, sizeof(g_diskSubHeader), pIBT);
 		fwrite(pCSV->getVarHeaders(), 1, g_diskHeader.numVars * sizeof(irsdk_varHeader), pIBT);
-		fwrite(sessionStr, 1, g_diskHeader.sessionInfoLen, pIBT);
+		fwrite(pCSV->getYAMLStr(), 1, g_diskHeader.sessionInfoLen, pIBT);
 
 		if(ftell(pIBT) != g_diskHeader.varBuf[0].bufOffset)
 			printf("ERROR: pIBT pointer mismach: %d != %d\n", ftell(pIBT), g_diskHeader.varBuf[0].bufOffset);

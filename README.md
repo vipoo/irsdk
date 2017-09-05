@@ -44,3 +44,9 @@ history:
 2016/12/06 - Maintenance update
 - Add support for 360 Hz telemetry
 - New csvt2ibt project that converts csv text files to .ibt files 
+
+2017/04/14 - Maintenance update
+- clean up build scripts for VC2012 compatibility
+
+2017/04/21 - Maintenance update
+- improve csv2ibt so it can import csv files produced by writetest 
