@@ -94,7 +94,11 @@ int main()
 	printf(" - press 'y' to save out the old telemetry file and start a new one.\n");
 	printf(" - press 'z' to toggle 'true' FFB mode.\n");
 	printf(" - press 'A' to go to session 1, time 100 seconds.\n");
+	printf("\n");
 	printf(" - press 'B' to request a fast repair.\n");
+	printf(" - press 'C' to uncheck clear winshield.\n");
+	printf(" - press 'D' to uncheck a fast repair.\n");
+	printf(" - press 'E' to uncheck add fuel.\n");
 	printf(" press any other key to exit\n\n");
 
 	bool done = false;
@@ -300,6 +304,20 @@ int main()
 			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_FR, 0);
 			break;
 
+		case 'C':
+			printf("Clear (uncheck) winshield pit commands\n");
+			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_ClearWS, 0);
+			break;
+
+		case 'D':
+			printf("Clear Fast Repair pit commands\n");
+			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_ClearFR, 0);
+			break;
+
+		case 'E':
+			printf("Clear Add Fuel pit commands\n");
+			irsdk_broadcastMsg(irsdk_BroadcastPitCommand, irsdk_PitCommand_ClearFuel, 0);
+			break;
 
 		default:
 			done = true;

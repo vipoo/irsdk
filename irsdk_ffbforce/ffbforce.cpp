@@ -9,6 +9,9 @@
 #	define _WIN32_WINNT		MIN_WIN_VER 
 #endif
 
+// uncomment to output data in simple csv format
+//#define SIMPLEOUTPUT
+
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -68,11 +71,15 @@ bool init(const char *path)
 				driverCarIdx = atoi(tstr);
 
 				// car
-				printf("Car:");
+#ifndef SIMPLEOUTPUT
+				printf("Car: ");
+#else
+//				printf("car,setup,track,Nm,nonLin,lin\n");
+#endif
 				_snprintf(tpath, MAX_STR, "DriverInfo:Drivers:CarIdx:{%d}CarScreenName:", driverCarIdx);
 				tpath[MAX_STR-1] = '\0';
 				if(1 == idk.getSessionStrVal(tpath, tstr, MAX_STR))
-					printf(" %s", tstr);
+					printf("%s", tstr);
 
 				sprintf(outFile, "histogram");
 
@@ -84,23 +91,35 @@ bool init(const char *path)
 					sprintf(outFile, "%s %s", outFile, tstr);
 				}
 
+#ifndef SIMPLEOUTPUT
 				printf("\n");
+#else
+				printf(",");
+#endif
 
 				// setup
-				printf("Setup:");
+#ifndef SIMPLEOUTPUT
+				printf("Setup: ");
+#endif
 				if(1 == idk.getSessionStrVal("DriverInfo:DriverSetupName:", tstr, MAX_STR))
-					printf(" %s", tstr);
+					printf("%s", tstr);
 
 				if(1 == idk.getSessionStrVal("DriverInfo:DriverSetupIsModified:", tstr, MAX_STR))
 					if(atoi(tstr) == 1)
 						printf(" (modified)");
 
+#ifndef SIMPLEOUTPUT
 				printf("\n");
+#else
+				printf(",");
+#endif
 
 				// track
-				printf("Track:");
+#ifndef SIMPLEOUTPUT
+				printf("Track: ");
+#endif
 				if(1 == idk.getSessionStrVal("WeekendInfo:TrackDisplayName:", tstr, MAX_STR))
-					printf(" %s", tstr);
+					printf("%s", tstr);
 
 				if(1 == idk.getSessionStrVal("WeekendInfo:TrackConfigName:", tstr, MAX_STR))
 					printf(" %s", tstr);
@@ -111,7 +130,11 @@ bool init(const char *path)
 					sprintf(outFile, "%s %s", outFile, tstr);
 				}
 
+#ifndef SIMPLEOUTPUT
 				printf("\n");
+#else
+				printf(",");
+#endif
 
 				sprintf(outFile, "%s.csv", outFile);
 
@@ -183,6 +206,9 @@ void shutdown()
 				break;
 		}
 
+#ifdef SIMPLEOUTPUT
+		printf("%d,%0.1f,%0.1f\n", Nm, 212.5f / Nm, 340.0f / Nm);
+#else
 		// report status
 		printf("\nPeak torque: %d Nm\n", Nm);
 		printf("Strength: %0.1f\n", 212.5f / Nm); //170.0f / Nm
@@ -209,7 +235,7 @@ void shutdown()
 			printf("\ndata saved to '%s'\n", outFile);
 			out = NULL;
 		}
-
+#endif // SIMPLEOUTPUT
 	}
 
 	idk.closeFile();
@@ -217,7 +243,9 @@ void shutdown()
 
 int main(int argc, char *argv[])
 {
+#ifndef SIMPLEOUTPUT
 	printf("ffbforce 1.0 - calculate peak torque from telemetry\n\n");
+#endif //SIMPLEOUTPUT
 
 	if(argc < 2)
 		printf("ffbforce <file.ibt>\n");
@@ -234,8 +262,10 @@ int main(int argc, char *argv[])
 			printf("init failed\n");
 	}
 
+#ifndef SIMPLEOUTPUT
 	printf("\nhit any key to continue\n");
 	getch();
+#endif //SIMPLEOUTPUT
 
 	return 0;
 }

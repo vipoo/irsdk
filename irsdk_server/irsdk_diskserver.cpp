@@ -75,7 +75,7 @@ FILE *openUniqueFile(const char *name, const char *ext, time_t t_time, bool asBi
 
 		if(i > 0)
 		{
-			_snprintf(tstr+strlen(tstr), MAX_PATH-strlen(tstr), " %02d", i, ext);
+			_snprintf(tstr+strlen(tstr), MAX_PATH-strlen(tstr), " %02d", i);
 			tstr[MAX_PATH-1] = '\0';
 		}
 
