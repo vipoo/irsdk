@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0bb4fab7-2fad-499c-8b61-d5e77f7febb5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
+
     <RootNamespace>irsdk_readtest</RootNamespace>
     <ProjectName>irsdk_readtest</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
