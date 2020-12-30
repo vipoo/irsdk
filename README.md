@@ -37,6 +37,21 @@ history:
 2015/09/23 - Maintenance update
 - Add new telemetry defines to irsdk_defines.h
 
+
+2016/04/19 - Maintenance update
+- New irsdkDiskClient helper class to simplify reading disk based .ibt files
+- New irsdk_ffbforce demo that uses above class to monitor force feedback steering torque
+
+2016/12/06 - Maintenance update
+- Add support for 360 Hz telemetry
+- New csvt2ibt project that converts csv text files to .ibt files 
+
+2017/04/14 - Maintenance update
+- clean up build scripts for VC2012 compatibility
+
+2017/04/21 - Maintenance update
+- improve csv2ibt so it can import csv files produced by writetest 
+
 2019/01/26 - Maintenance update
 - Update to SDK Version 1.12 and 
 - Update of Windows SDK and VC platform toolset
