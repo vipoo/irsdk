@@ -64,6 +64,7 @@ public:
 
 	// read next line out of file
 	bool getNextData();
+	int getDataCount() { return m_diskSubHeader.sessionRecordCount; }
 
 	int getVarIdx(const char *name);
 

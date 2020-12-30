@@ -36,3 +36,7 @@ history:
 
 2015/09/23 - Maintenance update
 - Add new telemetry defines to irsdk_defines.h
+
+2019/01/26 - Maintenance update
+- Update to SDK Version 1.12 and 
+- Update of Windows SDK and VC platform toolset
