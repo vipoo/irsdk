@@ -55,3 +55,6 @@ history:
 2019/01/26 - Maintenance update
 - Update to SDK Version 1.12 and 
 - Update of Windows SDK and VC platform toolset
+
+2020/12/31 - Maintenance update
+- Update of project files to VS2019
