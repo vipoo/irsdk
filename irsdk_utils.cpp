@@ -329,7 +329,7 @@ unsigned int irsdk_getBroadcastMsgID()
 
 void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, int var2, int var3)
 {
-	// Avoiding ambigious function call when linking with Qt libs. Since this function is
+    // Avoiding ambigious function call when linking with Qt libs. Since this function is
     // only used in the irsdk tests it is less invasive to disable it here.
     (void)msg;
     (void)var1;
