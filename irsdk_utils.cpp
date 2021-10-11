@@ -329,7 +329,13 @@ unsigned int irsdk_getBroadcastMsgID()
 
 void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, int var2, int var3)
 {
-	irsdk_broadcastMsg(msg, var1, MAKELONG(var2, var3));
+    // Avoiding ambigious function call when linking with Qt libs. Since this function is
+    // only used in the irsdk tests it is less invasive to disable it here.
+    (void)msg;
+    (void)var1;
+    (void)var2;
+    (void)var3;
+    // irsdk_broadcastMsg(msg, var1, MAKELONG(var2, var3));
 }
 
 void irsdk_broadcastMsg(irsdk_BroadcastMsg msg, int var1, float var2)
